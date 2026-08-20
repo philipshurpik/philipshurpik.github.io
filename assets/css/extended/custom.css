@@ -1,0 +1,6 @@
+/* Post images: cap the height so tall screenshots do not dominate the page, keep them centered. */
+.post-content img {
+    width: auto;
+    max-width: 720px;
+    margin: 1.5rem auto;
+}
