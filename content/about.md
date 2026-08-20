@@ -11,7 +11,7 @@ operations. 15+ years in software engineering, 8+ of them in production AI/ML: c
 high-volume LLM pipelines at LetsData (400M+ tokens/day, now migrating to self-hosted
 open-source models), previously production computer vision at Reface (70k+ faces per second).
 
-## Now: Head of Engineering @ LetsData
+### Now: Head of Engineering @ LetsData
 
 I am the hands-on technical lead on an InfoOps detection platform. It analyzes millions of social
 media posts and tens of thousands of videos daily for government and B2B clients. Most of my time
@@ -31,7 +31,7 @@ I lead our Data+ML team and set engineering standards across the org. About 60% 
 the code, by design. I mentor, I hire, I shape architecture, and the hardest technical problems are
 still where I create the most value.
 
-## Before: Principal Engineer / Head of ML Production @ Reface
+### Before: Principal Engineer / Head of ML Production @ Reface
 
 I joined as employee #3. I built the core ML pipeline for video face swaps and scaled it to 25k+
 swaps per minute on cloud GPUs. Then I built the ML Production team as the company grew to 100M+
@@ -40,7 +40,7 @@ installs and 200+ people.
 The ML work ran wide: face and keypoint detection, semantic segmentation, GAN inference,
 text-to-speech. I benchmarked open-source models and integrated the best into production.
 
-## What I go deep on
+### What I go deep on
 
 LLM inference optimization, evaluation frameworks, RAG and agentic systems, multimodal and
 vision-language systems, and the unglamorous production engineering that makes AI actually ship.
