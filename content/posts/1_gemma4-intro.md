@@ -2,7 +2,7 @@
 title: "Self hosting Gemma 4: Intro"
 date: 2026-08-20
 draft: false
-tags: []
+tags: ["llm", "vllm", "gemma"]
 ---
 
 How we build LLM Engine of @LetsData and process 1B+ tokens per day 10x cheaper comparing to API models with similar quality.
