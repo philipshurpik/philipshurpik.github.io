@@ -1,5 +1,5 @@
 baseURL: "https://philipshurpik.github.io/"
-title: "Philip's AI Journey"
+title: "Philip Shurpik"
 theme: "PaperMod"
 locale: "en-us"
 
@@ -17,7 +17,7 @@ minify:
 
 params:
   env: production
-  description: "Notes on LLM infrastructure, GPU inference, and production ML systems"
+  description: "Notes on LLM infrastructure, GPU inference, and Production ML systems"
   defaultTheme: auto # light / dark / auto
   ShowReadingTime: true
   ShowShareButtons: false
@@ -29,7 +29,7 @@ params:
   hideSummary: false
 
   homeInfoParams:
-    Title: "AI engineering in production"
+    Title: "Notes on AI Engineering in Production"
     Content: |
       I am Philip Shurpik, Head of Engineering at **LetsData**. I build AI infrastructure that holds
       up in production: 15+ years in software engineering, 8+ of them in AI/ML.
