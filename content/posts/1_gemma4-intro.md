@@ -1,5 +1,5 @@
 ---
-title: Self hosting Gemma 4: Intro
+title: "Self hosting Gemma 4: Intro"
 date: 2026-08-20
 draft: false
 tags: []
