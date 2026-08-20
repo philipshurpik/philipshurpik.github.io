@@ -1,0 +1,65 @@
+baseURL: "https://philipshurpik.github.io/"
+title: "Philip's AI Journey"
+theme: "PaperMod"
+languageCode: "en-us"
+
+enableRobotsTXT: true
+buildDrafts: false
+buildFuture: false
+buildExpired: false
+
+pagination:
+  pagerSize: 8
+
+minify:
+  disableXML: true
+  minifyOutput: true
+
+params:
+  env: production
+  description: "Notes on LLM infrastructure, GPU inference, and production ML systems"
+  defaultTheme: auto # light / dark / auto
+  ShowReadingTime: true
+  ShowShareButtons: false
+  ShowPostNavLinks: true
+  ShowBreadCrumbs: false
+  ShowCodeCopyButtons: true
+  ShowRssButtonInSectionTermList: true
+  ShowToc: false # can be enabled per-post with "showtoc: true" in front matter
+  hideSummary: false
+
+  homeInfoParams:
+    Title: "Head of Engineering @ LetsData | Hands-on AI Engineer: LLM pipelines (400M+ tokens/day), agentic AI workflows, RAG, LLM inference (vLLM) & evaluation | Ex-Principal Engineer @ Reface.ai"
+    Content: >
+      Architecting and building AI infrastructure that scales from proof-of-concept to millions of daily operations. 15+ years in software engineering, 8+ of them in production AI/ML - currently high-volume LLM pipelines @ LetsData (400M+ tokens/day, now migrating to self-hosted open-source models); previously production computer vision @ Reface (70k+ faces per second).
+
+      Head of Engineering @ LetsData, hands-on technical lead on an InfoOps detection platform analyzing millions of social media posts and tens of thousands of videos daily for government and B2B clients. Most of my time goes into our hardest problems:
+      * Leading migration from API models to self-hosted open-source LLMs: vLLM, FP8/NVFP4, MTP, LLM-as-judge evaluation (rating, pairwise, MQM) - matched Gemini 3.1 Flash Lite quality with Gemma 4 31B at ~10x lower cost
+      * Agentic AI workflows on Google ADK with MCP and RAG - accelerating analyst investigations, detecting impersonation and fraud
+      * Multimodal pipelines: LLM translation across 100+ languages, video analysis, embeddings and retrieval optimization
+      * Org-wide LLM observability and evaluation on Langfuse - tracing, prompt management, cost attribution
+
+      I lead our Data+ML team and set engineering standards across the org - but ~60% of my time stays in the code, by design. I mentor, I hire, I shape architecture; the hardest technical problems are still where I create the most value.
+
+      Before that: Principal Engineer / Head of ML Production @ Reface. Joined as employee #3, built the core ML pipeline for video face swaps, scaled it to 25k+ swaps per minute on cloud GPUs, and built the ML Production team as the company grew to 100M+ installs and 200+ people. The ML work ran wide: face/keypoint detection, semantic segmentation, GAN inference, text-to-speech. I benchmarked open-source models and integrated the best into production.
+
+      What I go deep on: LLM inference optimization, evaluation frameworks, RAG and agentic systems, multimodal and vision-language systems, and the unglamorous production engineering that makes AI actually ship.
+
+  socialIcons:
+    - name: github
+      url: "https://github.com/philipshurpik"
+    - name: linkedin
+      url: "https://www.linkedin.com/in/philipshurpik/"
+    - name: rss
+      url: "index.xml"
+
+menu:
+  main:
+    - identifier: archives
+      name: Archive
+      url: /archives/
+      weight: 10
+    - identifier: tags
+      name: Tags
+      url: /tags/
+      weight: 20
