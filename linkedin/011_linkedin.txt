@@ -1,0 +1,33 @@
+How we built the LLM engine at LetsData and process 1B+ tokens per day several times cheaper than API models of similar quality.
+
+A year and a half ago I joined LetsData and was selecting models to power our AI processing at scale, starting with replacing old-school ML translators with LLMs. After a lot of evals, open-source and API, Gemini 2.0 Flash won by a wide margin on quality per dollar - at $0.40 per 1M output tokens it became our workhorse for translation and for everything we built on top: topic modeling, summarization, image and video description, anomaly detection and validation, narrative extraction.
+
+But there is a twist with API models - they live a short life, 12-18 months. And sometimes the replacement costs a few times more, which breaks unit economics at scale. On February 18, 2026, Google deprecated Gemini 2.0 Flash, with shutdown on June 1.
+
+🔀 The options (as of spring 2026):
+→ Gemini 3.1 Flash Lite. About three times the price. Quality comparable to 2.0 Flash. The other Flash models cost even more.
+→ Other providers. Claude Haiku and GPT-5 mini cost more still. Every prompt we run is calibrated on Gemini, so a switch meant re-evaluating and rewriting all of them.
+→ Self-hosted open-source models. The one we picked.
+
+🔍 Model selection story:
+I started with Qwen 3.x models. They have decent quality on agentic tasks with thinking enabled, but they are slow and burn a lot of tokens. With thinking disabled, quality drops a lot. And their hybrid architecture (Gated DeltaNet + attention) makes prefix caching less precise: with FP8 KV cache and MTP, vLLM sizes the KV block to 1,600 tokens on Qwen3.8 27B, so shorter prompts get zero cache hits.
+
+But everything changed on April 2, 2026, when Google released Gemma 4. Around the same time Google Cloud made G4 instances with the RTX PRO 6000 Blackwell available - 96 GB of VRAM, including fractional GPUs. That changed both the quality equation and the math.
+
+⚡ The levers to get the maximum out of a self-hosted model while keeping quality almost unchanged:
+→ Optimize concurrency and the available KV cache
+→ Run the KV cache in FP8
+→ Use MTP speculative decoding with tuned parameters
+→ Use NVFP4 weights when possible. The catch: a proper NVFP4 build is mixed precision - attention and some MLPs in FP8, the rest NVFP4. That gives a smaller docker image, more KV cache headroom and higher throughput than FP8.
+
+I did the same manually from the Google QAT checkpoint - NVFP4 MLPs, FP8 attention, calibrated on our own traffic. Same quality on most tasks, but still some drop on low-resource language translation. Then the Unsloth build arrived with the more refined recipe, and we moved to it: ~30% more throughput at 128 parallel requests than the FP8 model, with spare GPU memory to co-host embedding models.
+
+📊 All numbers re-measured on vLLM 0.31 with FP8 KV cache and MTP on, using our production translation prompt - per model, at 1 request and 128 parallel, in the image.
+
+💰 Pricing comes down to what load you have, and whether it fits self-hosted models. We process social media data: an almost steady flow of requests with occasional bursts for heavier processing, so queue-based autoscaling on Kubernetes fits well.
+
+Current Spot prices on Google Cloud: $1,189 per month for a full GPU (g4-standard-48), $683 for a half (g4-standard-24). Converted into $/MTok with our production profile - 5:1 input:output split, input priced at 1/5 of output, average load at 50% of peak throughput - the comparable Gemma models come out 32-46% cheaper than Qwen, and Gemma 4 26B-A4B lands at $0.064 per 1M output tokens against $1.50 for Gemini 3.1 Flash Lite. And unlike an API bill, the same G4 node can also host smaller GPU models (an embedding model, in our case), and CPU-heavy jobs can run on its spare 48 vCPUs.
+
+💬 Interested in the Gemma 4 vs Qwen quality comparison on multilingual data, dense vs MoE and when to pick which, or the Gemma 4 LoRA fine-tuning story? Leave a comment and I will publish them next.
+
+#vLLM #Gemma #LLMOps #Quantization #AIInfrastructure
