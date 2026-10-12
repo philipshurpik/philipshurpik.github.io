@@ -2,7 +2,7 @@
 title: "Self hosting Gemma 4: Intro"
 date: 2026-08-20
 slug: "gemma4-intro"
-draft: false
+draft: true
 tags: ["llm", "vllm", "gemma"]
 ---
 
