@@ -67,6 +67,9 @@ I price calculated for our production usage: 5 input tokens to 1 output token, 1
 # qwen 3.6 35b a3b unsloth nvfp4:   input $/Mtok: 0.021, output $/Mtok: 0.103
 # gemma4 26b a4b nvidia fp8:        input $/Mtok: 0.013, output $/Mtok: 0.064
 
+## API for comparison:
+# gemini 3.1 flash lite:            input $/Mtok: 0.250, output $/Mtok: 1.500
+
 So for high througput serving compatible Gemma models get 30-40% more efficient.
 If you are interesting in quality comparison between Gemma 4 and Qwen on multilingual datasets, choosing between Dense and MoE models, and when to choose which.
 And also stories of Gemma 4 LORA finetuning - leave a comment - I will publish them next.
