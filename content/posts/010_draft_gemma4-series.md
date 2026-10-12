@@ -6,7 +6,7 @@ draft: false
 tags: ["llm", "vllm", "gemma"]
 ---
 
-How we build LLM Engine of @LetsData and process 1B+ tokens per day 10x cheaper comparing to API models with similar quality.
+How we build LLM Engine of @LetsData and process 1B+ tokens per day multiple times cheaper comparing to API models with similar quality. 
 
 This journey started year and half ago, when I joined LetsData and was selecting models to power our AI processings at scale.
 The first one case was simple - we needed to replace outdated old-school ML translators with LLMs.
@@ -17,7 +17,8 @@ It was better comparing to 3-5 times more expensive models from other providers.
 So for the long time it started being our workhorse for translations and everything we built on top:
 topic modelling, summarisation, image and video description, anomalies detection and validation, and narrative extraction.
 
-But 7 months ago Google made an announce, that Gemini 2.0 Flash would be depricated at the beginning of the summer.
+On February 18, 2026 Google deprecated Gemini 2.0 Flash, with a shutdown on June 1.
+We had three and a half months to replace the model under every pipeline we run. 
 
 ### Self hosting story
 
@@ -29,7 +30,7 @@ So what was our options:
 * Other providers (Haiku and GPT-5 mini costed even more, plus all our prompts that calibrated on Gemini models would require a lot of evaluations and changes)
 * Go into self hosted open source world
 
-I decided to go with 3rd option and it was quite fun. And turned to be efficient.
+We decided to go with 3rd option and it was quite fun. And turned to be efficient.
 
 So what was our candidates 6 months ago?
 * LLama - pretty outdated, no recent releases. Not worked well in my year ago experiments 
