@@ -1,75 +1,87 @@
 ---
-title: "Self-hosting models: cost efficient serving"
+title: "Self-hosting models: cost-efficient serving"
 date: 2026-10-12
 slug: "efficient-serving"
 draft: false
 tags: ["llm", "vllm", "gemma", "qwen", "self-hosting"]
 ---
 
-How we build LLM Engine of @LetsData and process 1B+ tokens per day multiple times cheaper comparing to API models with similar quality.
+How we built the LLM engine at LetsData and process 1B+ tokens per day several times cheaper than API models of similar quality.
 
 ### How we got here
 
-This journey started year and half ago, when I joined LetsData and was selecting models to power our AI processings at scale.
+This journey started a year and a half ago, when I joined LetsData and was selecting models to power our AI processing at scale.
 The first task was simple: replace old-school ML translators with LLMs.
 I ran a lot of evals, both on open-source models such as Llama and on API models from OpenAI and Google.
-Gemini 2.0 Flash won by a wide margin on quality per price - cost of $0.4/1M output tokens made it our workhorse for translation and for everything we built on top: topic modelling, summarisation, image and video description, anomaly detection and validation, narrative extraction.
+Gemini 2.0 Flash won by a wide margin on quality per dollar - at $0.40 per 1M output tokens it became our workhorse for translation and for everything we built on top: topic modeling, summarization, image and video description, anomaly detection and validation, narrative extraction.
 
-But the twist with API models - they are living short life - 12/18 months.
-And sometimes their replacement models cost few times more, that breaks unit economics at scale.
-On February 18, 2026 Google deprecated Gemini 2.0 Flash, with a shutdown on June 1.
+But there is a twist with API models - they live a short life, 12-18 months.
+And sometimes the replacement costs a few times more, which breaks unit economics at scale.
+On February 18, 2026, Google deprecated Gemini 2.0 Flash, with shutdown on June 1.
 
 ### The options (as of spring 2026)
 
-* **Gemini 3.1 Flash Lite.** About three times the price. Quality comparable to 2.0 Flash, sometimes better and sometimes worse depending on the task. Other Flash models were even more expensive.
+* **Gemini 3.1 Flash Lite.** About three times the price. Quality comparable to 2.0 Flash. The other Flash models cost even more.
 * **Other providers.** Claude Haiku and GPT-5 mini cost more still. Every prompt we run is calibrated on Gemini, so a switch meant re-evaluating and rewriting all of them.
-* **Self-hosted open-source models.**
+* **Self-hosted open-source models.** The one we picked.
 
 ### Model selection story
 
-I've started with Qwen 3.X models. They have decent quality for agentic tasks, with thinking enabled, but slow and eat a lot of tokens. 
-And quality drops a lot with disabled thinking. And have architecture that makes harder efficient KV caching - cache only in big chunks starting at ~1600+ tokens
+I started with Qwen 3.x models. They have decent quality on agentic tasks with thinking enabled, but they are slow and burn a lot of tokens.
+With thinking disabled, quality drops a lot.
+And their hybrid architecture (Gated DeltaNet + attention) makes prefix caching less precise.
+vLLM sizes the KV cache block to the recurrent state, which with FP8 KV cache and MTP is 1,600 tokens on Qwen3.8 27B.
+Prompts shorter than that get zero cache hits. And that also limits max number of concurrent requests that could be efficiently served.
 
 But everything changed on April 2, 2026, when Google released Gemma 4.
-Plus at the same time Google Cloud made availiable G4 instances with the RTX PRO 6000 Blackwell, 96 GB of VRAM, including fractional GPUs.
+Around the same time Google Cloud made G4 instances with the RTX PRO 6000 Blackwell available - 96 GB of VRAM, including fractional GPUs.
 That changed both the quality equation and the math.
 
-### Performance output tokens/sec
+### Performance: output tokens per second
 
-Here are performance metrics in output tokens/second. 
-Idea would be to show Gemma4 31B unsloth nvfp4 with 128 parallel, translation v4 prompt:
-All measured with kv cache in fp8, and mtp turned on.
+When self-hosting it's important to get maximum from the model having the quality almost non-changed.
+And actually there are few levers to use:
+* Optimise concurrency and available KV cache
+* Run KV cache in FP8 precision
+* Using MTP speculative decoding with optimal parameters
+* Using NVFP4 precision when possible. But here is the catch. Proper NVFP4 requires only quantisation of same layers and serving others (as attention or global pooling) as fp8.
+  * Only that could give you much smaller image, more free memory headroom for KV cache and faster speed.
+  * I've done that manually with google released QAT image, and it showed the same performance on most of tasks, but still some drop for low resource language translation.
+  * But fortunately unsloth quantisation of Gemma4 31B arrived, and we moved to it. It showed ~25% performance increase comparing to fp8 model with some spare GPU memory to co-host embedding models. 
 
-One graph with 7 bars, where main one is for 128 requests, and smaller one inside, as part - for 1 request tok/sec
+I've re-evaluated numbers on recent vllm 0.31, with all optimisations turned on: KV cache in FP8, MTP speculative decoding on.
+All tok/sec numbers here using our production translation prompt.
 
-## half instance:
-# qwen 3.6 35b a3b unsloth nvfp4:   c=1: 195.9, c=128: 1986.1
-# gemma4 26b a4b nvidia nvfp4:      c=1: 178.6, c=128: 3645.4
+| Model | GPU               | 1 request | 128 parallel |
+|---|-------------------|-----------|--------------|
+| Qwen3.6 35B-A3B Unsloth NVFP4 | 1/2 RTX 6000 Pro  | 195.9     | 1,986.1      |
+| Gemma 4 26B-A4B NVIDIA NVFP4 | 1/2 RTX 6000 Pro  | 178.6     | 3,645.4      |
+| Qwen3.8 27B Unsloth NVFP4 | RTX 6000 Pro | 137.1     | 2,009.6      |
+| Gemma 4 31B Google FP8 | RTX 6000 Pro | 117.1     | 2,300.9      |
+| Gemma 4 31B Unsloth NVFP4 | RTX 6000 Pro | 140.0     | 2,982.2      |
+| Qwen3.6 35B-A3B Unsloth NVFP4 | RTX 6000 Pro | 336.8     | 4,408.6      |
+| Gemma 4 26B-A4B NVIDIA NVFP4 | RTX 6000 Pro | 264.1     | 7,042.1      |
 
-## full instance:
-# qwen 3.8 27b unsloth nvfp4:       c=1: 137.1, c=128: 2009.6
-# gemma4 31b google fp8:            c=1: 110.6, c=128: 2361.8
-# gemma4 31b unsloth nvfp4:         c=1: 140.0, c=128: 2982.2
-# qwen 3.6 35b a3b unsloth nvfp4:   c=1: 336.8, c=128: 4408.6
-# gemma4 26b a4b nvidia fp8:        c=1: 264.1, c=128: 7042.1
+### Pricing
 
-Here is pricing, if run on spot instance autopilot kubernetes cluster: $1189 (full-g4-standard-48), $683 (half-g4-standard-24)
-I price calculated for our production usage: 5 input tokens to 1 output token, 1:5 input/output price ratio, on avg 50% of max available throughput (roughly 16-32 parallel requests):
+Here is the most interesting part, that defines - what load do you have, and do it fit enough with self hosting models.
+Luckily enough we process social media data and have almost steady flow of requests with occasional bursts for more hungry processings - therefore queue based autoscaling on kubernetes fits our usage well.
+And now let's go to pricing - with current spot values on Google Cloud it's $1,189 for a full GPU (g4-standard-48) and $683 for a half GPU.
 
-## half instance: 
-# qwen 3.6 35b a3b unsloth nvfp4:   input $/Mtok: 0.026, output $/Mtok: 0.131
-# gemma4 26b a4b nvidia nvfp4:      input $/Mtok: 0.014, output $/Mtok: 0.071
+I've converted it into $/MTok using our production profile: 1:5 input:output split, input priced at 1/5 of output, and an average load of 50% of peak throughput (roughly 16-32 parallel requests).
 
-## full instance:
-# qwen 3.8 27b unsloth nvfp4:       input $/Mtok: 0.045, output $/Mtok: 0.225
-# gemma4 31b google fp8:            input $/Mtok: 0.038, output $/Mtok: 0.192
-# gemma4 31b unsloth nvfp4:         input $/Mtok: 0.030, output $/Mtok: 0.152
-# qwen 3.6 35b a3b unsloth nvfp4:   input $/Mtok: 0.021, output $/Mtok: 0.103
-# gemma4 26b a4b nvidia fp8:        input $/Mtok: 0.013, output $/Mtok: 0.064
+| Model | GPU              | input $/Mtok | output $/Mtok |
+|---|------------------|---|---|
+| Qwen3.6 35B-A3B Unsloth NVFP4 | 1/2 RTX 6000 Pro | 0.026 | 0.131 |
+| Gemma 4 26B-A4B NVIDIA NVFP4 | 1/2 RTX 6000 Pro | 0.014 | 0.071 |
+| Qwen3.8 27B Unsloth NVFP4 | RTX 6000 Pro     | 0.045 | 0.225 |
+| Gemma 4 31B Google FP8 | RTX 6000 Pro     | 0.038 | 0.192 |
+| Gemma 4 31B Unsloth NVFP4 | RTX 6000 Pro     | 0.030 | 0.152 |
+| Qwen3.6 35B-A3B Unsloth NVFP4 | RTX 6000 Pro     | 0.021 | 0.103 |
+| Gemma 4 26B-A4B NVIDIA NVFP4 | RTX 6000 Pro     | 0.013 | 0.064 |
+| Gemini 3.1 Flash Lite  | API         | 0.250 | 1.500 |
 
-## API for comparison:
-# gemini 3.1 flash lite:            input $/Mtok: 0.250, output $/Mtok: 1.500
+So for high-throughput serving, the comparable Gemma models come out 30-45% cheaper than Qwen.
+And unlike an API bill, the same g4 node could also host smaller GPU models (embedding model in our case), and CPU-heavy jobs can run on the node's spare 48 vCPUs.
 
-So for high througput serving compatible Gemma models get 30-40% more efficient.
-If you are interesting in quality comparison between Gemma 4 and Qwen on multilingual datasets, choosing between Dense and MoE models, and when to choose which.
-And also stories of Gemma 4 LORA finetuning - leave a comment - I will publish them next.
+Interested in the Gemma 4 vs Qwen quality comparison on multilingual data, dense vs MoE and when to pick which, or the Gemma 4 LoRA fine-tuning story? Leave a comment and I will publish them next.
