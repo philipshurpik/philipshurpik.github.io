@@ -8,6 +8,8 @@ tags: ["llm", "vllm", "gemma", "qwen", "self-hosting"]
 
 How we built the LLM engine at LetsData and process 1B+ tokens per day several times cheaper than API models of similar quality.
 
+![Gemma 4 vs Qwen 3.x on RTX PRO 6000: output tokens per second and cost per 1M tokens, next to Gemini 3.1 Flash Lite](/images/011_efficient-serving-light-2400.png)
+
 ### How we got here
 
 This journey started a year and a half ago, when I joined LetsData and was selecting models to power our AI processing at scale.
@@ -81,7 +83,7 @@ I converted it into $/MTok using our production profile: a 5:1 input:output toke
 | Gemma 4 26B-A4B NVIDIA NVFP4 | RTX PRO 6000 | 0.013        | 0.064         |
 | Gemini 3.1 Flash Lite  | API         | 0.250        | 1.500         |
 
-So for high-throughput serving, the comparable Gemma models come out 30-45% cheaper than Qwen.
+So for high-throughput serving, the comparable Gemma models come out 32-46% cheaper than Qwen.
 And unlike an API bill, the same G4 node can also host smaller GPU models (an embedding model, in our case), and CPU-heavy jobs can run on its spare 48 vCPUs.
 
 Interested in the Gemma 4 vs Qwen quality comparison on multilingual data, dense vs MoE and when to pick which, or the Gemma 4 LoRA fine-tuning story? Leave a comment and I will publish them next.
